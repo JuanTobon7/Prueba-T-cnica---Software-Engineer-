@@ -14,13 +14,13 @@ async function bootstrap() {
   
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new GlobalExceptionFilter());
-
+  app.setGlobalPrefix('api/v1');
   const config = new DocumentBuilder()
     .setTitle('My API')
     .setVersion('1.0')
     .build();
-  app.useGlobalPipes(
-    new ValidationPipe({
+    app.useGlobalPipes(
+      new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
