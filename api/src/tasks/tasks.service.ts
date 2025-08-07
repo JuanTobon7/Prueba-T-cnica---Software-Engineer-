@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { CreateTasksDto } from './dto/create-tasks/create-tasks.decorator';
 import { Task } from '@prisma/client';
-import { StatusTaskEnum } from './enum/status-task/status-task.decorator';
 
 @Injectable()
 export class TasksService {
@@ -15,9 +14,7 @@ export class TasksService {
                 userId: userId,
                 title: dto.title,
                 description: dto.description,
-                status: dto.status || StatusTaskEnum.PENDING,
                 createdAt: dto.createdAt,
-                updatedAt: dto.updatedAt
             }
         });
         return task;
@@ -43,18 +40,15 @@ export class TasksService {
             data: {
                 title: dto.title,
                 description: dto.description,
-                status: dto.status || task.status,
-                updatedAt: new Date()
             }
         });
         return updatedTask;
     }
 
-    async deleteTask(id: string): Promise<void>{
+    async deleteTask(id: string, userId: string): Promise<void>{
         if(!id) throw new NotFoundException('Task Id is required');
-        const task = await this.prismaService.task.findUnique({where: {id:id}});
+        const task = await this.prismaService.task.findUnique({where: {id:id, userId: userId}});
         if(!task) throw new NotFoundException(`Task with Id ${id} not found`)
         await this.prismaService.task.delete({where: {id: id}})
-        return;
     }
 }

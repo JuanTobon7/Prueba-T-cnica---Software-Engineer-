@@ -4,9 +4,6 @@ export class ApiResponse<T = any> {
   @ApiProperty()
   success: boolean;
 
-  @ApiProperty()
-  statusCode: number;
-
   @ApiProperty({ required: false })
   message?: string;
 
@@ -26,7 +23,6 @@ export class ApiResponse<T = any> {
   static success<T>(data: T, message?: string): ApiResponse<T> {
     return new ApiResponse({
       success: true,
-      statusCode: 200,
       message,
       data,
     });
@@ -35,7 +31,6 @@ export class ApiResponse<T = any> {
   static created<T>(data: T, message?: string): ApiResponse<T> {
     return new ApiResponse({
       success: true,
-      statusCode: 201,
       message: message || 'Resource created',
       data,
     });
@@ -44,7 +39,6 @@ export class ApiResponse<T = any> {
   static deleted(message = 'Resource deleted'): ApiResponse<null> {
     return new ApiResponse({
       success: true,
-      statusCode: 200,
       message,
       data: null,
     });
@@ -53,7 +47,6 @@ export class ApiResponse<T = any> {
   static error(message: string, statusCode = 500, path?: string): ApiResponse<null> {
     return new ApiResponse({
       success: false,
-      statusCode,
       message,
       timestamp: new Date().toISOString(),
       path,

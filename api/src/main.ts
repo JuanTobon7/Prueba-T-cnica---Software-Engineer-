@@ -5,13 +5,14 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ResponseInterceptor } from './common/res/interceptor/response.interceptor'; 
 import { GlobalExceptionFilter } from './common/res/filters/global-exception.filter'; 
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   const prismaService = app.get(PrismaService);
   await prismaService.enableShutdownHooks(app);
-  
+  app.use(cookieParser())
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.setGlobalPrefix('api/v1');

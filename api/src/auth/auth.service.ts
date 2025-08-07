@@ -3,11 +3,12 @@ import { CreateUserDto } from './dto/req/create-user.decorator';
 import { PrismaService } from 'prisma/prisma.service'; 
 import * as bcrypt from 'bcrypt';
 import { UserResponseDto } from './dto/res/user-response.decorator';
-import { LoggingUserResponseDto } from './dto/res/logging-user-response.decorator';
 import { LoggingUserDto } from './dto/req/logging-user.decorator';
+import { JwtService } from '@nestjs/jwt';
+import { JwtStuct } from 'src/common/conf/jwt.struct';
 @Injectable()
 export class AuthService {
-    constructor(private readonly prismaService: PrismaService){}
+    constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService){}
 
     private async EncryptPassword(password: string): Promise<string> {
         return await bcrypt.hash(password,10);
@@ -33,13 +34,12 @@ export class AuthService {
         userResponse.lastName = user.last_name;
         return userResponse;
     }
-    async logIn(dto: LoggingUserDto):Promise<LoggingUserResponseDto>{
+    async logIn(dto: LoggingUserDto){
         const user = await this.prismaService.user.findUnique({where: {email: dto.email}})
         if(!user) throw new NotFoundException(`User not found with email: ${dto.email}`)
         const isPasswordValid = await this.ComparePassword(dto.password, user.password);
         if(!isPasswordValid) throw new UnauthorizedException('Invalid Password');
-        const userResponse = new LoggingUserResponseDto();
-        userResponse.email = user.email;
-        return userResponse;
+        return this.jwtService.sign({userId: user.id, email: user.email} as JwtStuct)
+
     }
 }

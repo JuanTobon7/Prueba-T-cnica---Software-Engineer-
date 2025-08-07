@@ -1,20 +1,18 @@
-import { Optional, SetMetadata } from '@nestjs/common';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
-import { StatusTaskEnum } from 'src/tasks/enum/status-task/status-task.decorator';
-export const CreateTasks = (...args: string[]) => SetMetadata('create-tasks', args);
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateTasksDto {
-    @IsNotEmpty({message: 'Title is required'})
-    @IsString({message: 'Title must be a string'})
-    title: string
-    @IsOptional()
-    @IsString({message: 'Description must be a string'})
-    description: string
-    @IsOptional()
-    @IsEnum(StatusTaskEnum, {message: `Status must be a valid status (${Object.values(StatusTaskEnum).join(', ')})`})
-    status?: string = StatusTaskEnum.PENDING
-    @IsNotEmpty({message: 'The Date is required'})
-    createdAt: Date
-    @IsOptional()
-    updatedAt: Date = new Date();
+  @ApiProperty({ example: 'Buy groceries', description: 'Title of the task' })
+  @IsNotEmpty({ message: 'Title is required' })
+  @IsString({ message: 'Title must be a string' })
+  title: string;
+
+  @ApiPropertyOptional({ example: 'Milk, eggs, bread', description: 'Details about the task' })
+  @IsOptional()
+  @IsString({ message: 'Description must be a string' })
+  description: string;
+
+  @ApiProperty({ example: '2025-08-06T12:00:00Z', description: 'Creation date of the task' })
+  @IsNotEmpty({ message: 'The Date is required' })
+  createdAt: Date;
 }
