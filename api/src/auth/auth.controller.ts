@@ -1,6 +1,7 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Put } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDto } from './dto/create-user.decorator'; 
+import { CreateUserDto } from './dto/create-user.decorator';
+import { LoggingUser, LoggingUserUserDto } from './dto/logging-user.decorator';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { ApiResponse } from 'src/common/res/dto/api-response.dto';
 
@@ -12,8 +13,8 @@ export class AuthController {
         type: ApiResponse,
     })
     @Post('register')
-    register(@Body() dto: CreateUserDto){
-        this.authService.createUser(dto);         
+    async register(@Body() dto: CreateUserDto){
+        await this.authService.createUser(dto);
     }
 
     @ApiOkResponse({
@@ -21,7 +22,8 @@ export class AuthController {
         type: ApiResponse        
     })
     @Post('login')
-    login(){
-        
+    async login(@Body() dto: LoggingUserUserDto){
+        await this.authService.logIn(dto);
+        return 'User logged in successfully!';
     }
 }

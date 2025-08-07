@@ -3,8 +3,8 @@ import { AppModule } from './app.module';
 import { PrismaService } from 'prisma/prisma.service';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ResponseInterceptor } from './common/interceptor/response.interceptor'; 
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter'; 
+import { ResponseInterceptor } from './common/res/interceptor/response.interceptor'; 
+import { GlobalExceptionFilter } from './common/res/filters/global-exception.filter'; 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

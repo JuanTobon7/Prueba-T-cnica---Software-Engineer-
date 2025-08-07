@@ -9,13 +9,10 @@ export class CreateTasksDto {
     title: string
     @IsOptional()
     @IsString({message: 'Description must be a string'})
-    description: String
+    description: string
     @IsOptional()
     @IsEnum(StatusTaskEnum, {message: `Status must be a valid status (${Object.values(StatusTaskEnum).join(', ')})`})
-    status?: String = StatusTaskEnum.PENDING
-    @IsNotEmpty({message: 'User ID is required'})
-    @IsUUID('4',{message: 'User ID must be a valid UUID'})
-    userId: String
+    status?: string = StatusTaskEnum.PENDING
     @IsNotEmpty({message: 'The Date is required'})
     createdAt: Date
     @IsOptional()
