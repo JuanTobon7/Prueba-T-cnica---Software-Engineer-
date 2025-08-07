@@ -1,7 +1,7 @@
 import { Global, Module } from "@nestjs/common";
 
-import { GlobalExceptionFilter } from "../filters/global-exception.filter"; 
-import { ResponseInterceptor } from "../interceptor/response.interceptor";
+import { GlobalExceptionFilter } from "./filters/global-exception.filter"; 
+import { ResponseInterceptor } from "./interceptor/response.interceptor";
 
 @Global()
 @Module({

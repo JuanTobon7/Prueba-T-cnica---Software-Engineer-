@@ -14,7 +14,7 @@ CREATE TABLE "public"."Task" (
 -- CreateTable
 CREATE TABLE "public"."User" (
     "id" UUID NOT NULL,
-    "fisrt_name" VARCHAR(200) NOT NULL,
+    "first_name" VARCHAR(200) NOT NULL,
     "last_name" VARCHAR(200) NOT NULL,
     "email" VARCHAR(256) NOT NULL,
     "password" VARCHAR(256) NOT NULL,
