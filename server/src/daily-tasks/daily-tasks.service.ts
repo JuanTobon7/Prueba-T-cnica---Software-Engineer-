@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DailyTask } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
-import { DailyTasksDto } from './dto/req/daily-task.dto';
+import { DailyTasksDto } from './dto/req/daily-task.dto'; 
 
 @Injectable()
 export class DailyTasksService {

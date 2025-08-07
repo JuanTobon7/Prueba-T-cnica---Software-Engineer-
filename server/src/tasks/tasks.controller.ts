@@ -7,12 +7,14 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { CreateTasksDto } from './dto/create-tasks/create-tasks.decorator';
-import { ApiBearerAuth, ApiOkResponse, ApiTags, ApiCreatedResponse, ApiUnauthorizedResponse, getSchemaPath, ApiExtraModels } from '@nestjs/swagger';
+import { ArrayTasksDto } from './dto/array-tasks.decorator';
+import { CreateTasksDto } from './dto/create-tasks.decorator';
+import { ApiBearerAuth, ApiOkResponse, ApiTags, ApiCreatedResponse, ApiUnauthorizedResponse, getSchemaPath, ApiExtraModels, ApiQuery } from '@nestjs/swagger';
 import { ApiResponse } from 'src/common/res/dto/api-response.dto';
 import { TasksService } from './tasks.service';
 import type { Request } from 'express';
@@ -65,7 +67,7 @@ export class TasksController {
     return ApiResponse.created(response);
   }
 
-  @ApiExtraModels(ApiResponse, CreateTasksDto)
+  @ApiExtraModels(ApiResponse, ArrayTasksDto)
   @ApiOkResponse({
     description: 'Task list retrieved successfully',
     schema: {
@@ -73,7 +75,7 @@ export class TasksController {
         { $ref: getSchemaPath(ApiResponse) },
         {
           properties: {
-            data: { $ref: getSchemaPath(CreateTasksDto) },
+            data: { $ref: getSchemaPath(ArrayTasksDto) },
           },
         },
       ],
@@ -81,12 +83,15 @@ export class TasksController {
   })
   @ApiUnauthorizedResponse({description: 'Unauthorized - JWT is missing or invalid'})
   @UseGuards(JwtAuthGuard)
+  @ApiQuery({ name: 'date', required: false, type: String, description: 'Filter tasks by creation date (ISO format)' })
+  @ApiQuery({ name: 'status', required: false, type: String, description: 'Filter tasks by status (e.g., "pending", "done")' })
+
   @Get()
-  async getListTasks(@Req() request: Request) {
+  async getListTasks(@Req() request: Request,@Query('date') date?: string, @Query('status') status?: string) {
     const token = request.cookies['access_token'];
     const payload = this.verifyToken(token)
     const userId = payload.userId as string;
-    return await this.taskService.getListTasks(userId);
+    return await this.taskService.getListTasks(userId,date,status);
   }
   @ApiExtraModels(ApiResponse, CreateTasksDto)
   @ApiOkResponse({

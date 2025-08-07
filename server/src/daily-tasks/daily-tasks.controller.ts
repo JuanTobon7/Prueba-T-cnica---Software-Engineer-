@@ -7,7 +7,7 @@ import { JwtAuthGuard } from 'src/common/conf/jwt.guard';
 
 @ApiTags('Daily Tasks')
 @ApiBearerAuth()
-@Controller('tasks/daily-tasks')
+@Controller('tasks/:taskId/daily-tasks')
 export class DailyTasksController {
     constructor(private readonly dailyTaskService: DailyTasksService){}
         
@@ -29,9 +29,9 @@ export class DailyTasksController {
     @ApiUnauthorizedResponse({ description: 'Unauthorized - JWT is invalid or missing' })
     @ApiBadRequestResponse({ description: 'Bad Request - Invalid input data'})
     @UseGuards(JwtAuthGuard)
-    @Post(':taskId')
+    @Post()
     async updateDailyTask(@Body() dto: DailyTasksDto,@Param('taskId') taskId: string){
         if(!taskId) throw new BadRequestException('taskId is required')
         return await this.dailyTaskService.updateDailyTask(taskId,dto);
-    }
+    }    
 }

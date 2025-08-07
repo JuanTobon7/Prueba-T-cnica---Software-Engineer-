@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
-import { CreateTasksDto } from './dto/create-tasks/create-tasks.decorator';
-import { Task } from '@prisma/client';
+import { CreateTasksDto } from './dto/create-tasks.decorator'; 
+import { Prisma, Task } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
@@ -20,12 +20,18 @@ export class TasksService {
         return task;
     }
 
-    async getListTasks(userId: string): Promise<Task[]>{
+    async getListTasks(userId: string, dateStr?: string, status?: string): Promise<Task[]>{
         if(!userId) throw new NotFoundException('User Id is required');
+        const date = dateStr ? new Date(dateStr) : undefined        
         const tasks = await this.prismaService.task.findMany({
             where: {userId: userId},
-            orderBy: {createdAt: 'desc'}
-        })
+            orderBy: { createdAt: 'desc' },
+            include: {
+                dailyTasks: {
+                    where: {status: status, date: date}
+                }                
+            }
+        });
         if(!tasks || tasks.length === 0) throw new NotFoundException('No tasks found for this user');
         return tasks;
     }
