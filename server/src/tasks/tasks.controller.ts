@@ -76,14 +76,11 @@ export class TasksController {
   @Get()
   async getListTasks(@Req() request: Request,@Query() query: any,@Query('date') date: string, @Query('status') status?: string) {
     const payload = request.user;
-    console.log(payload);
+    console.log(query);
     if(!payload) throw new UnauthorizedException('No logueado');
     const userId = payload['userId'] as string;
-    if(!date) throw new BadRequestException("No fecha prevista");
-    if(status?.split('')){
-      status = ''
-    }
-    return await this.taskService.getListTasks(userId,date,status ? status : '' );
+    if(!date) throw new BadRequestException("No fecha prevista");    
+    return await this.taskService.getListTasks(userId,date,status);
   }
   @ApiExtraModels(ApiResponse, CreateTasksDto)
   @ApiOkResponse({

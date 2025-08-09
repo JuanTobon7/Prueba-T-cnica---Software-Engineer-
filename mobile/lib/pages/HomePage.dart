@@ -67,18 +67,13 @@ class _MyHomePageState extends State<MyHomePage> {
     return today.trim() != _dateStr.trim();
   }
 
-  Future<void> updateDailyTask(String id, TaskEnum status) async {
+  Future<void> updateDailyTask(String id) async {
     try{
       if(id.isEmpty) return AlertHelper.show('Datos Incompletos', 'No se especifico la tarea');
-      if(status.name.isEmpty) return AlertHelper.show('Datos Incompletos', 'No se especifico el estado');
 
       if(afterDate()) return AlertHelper.show('Operación Invalida', 'No puede cambiar el estado de una tarea en una fecha distinta a la actual');
 
-      final data = {
-        "status": status.name,
-        "date": _formatDate(DateTime.now())
-      };
-      await apiTask.updateDailyTask(id, data);
+      await apiTask.updateDailyTask(id, _formatDate(DateTime.now()));
       await _getList();
     }catch(e){
       AlertHelper.show('un error inesperado a ocurrido','');
@@ -137,7 +132,6 @@ class _MyHomePageState extends State<MyHomePage> {
         _isLoading = false;
       });
     } on DioException catch(err){
-      print('manejando error sueprficie: ${err.response?.data['message']}');
       if(err.response?.statusCode == 404 ){
         setState(() {
           tasks = [];
@@ -194,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(height: 20),
                   // Fecha igual
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch, // para que Rows tomen todo el ancho
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

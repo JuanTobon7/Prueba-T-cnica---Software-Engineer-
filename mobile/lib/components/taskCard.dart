@@ -8,7 +8,7 @@ class MyCardTask extends StatelessWidget {
   final TaskEnum status;
   final bool isSelected;
   final String id;
-  final void Function(String id, TaskEnum status) action;
+  final void Function(String id) action;
 
   const MyCardTask({
     super.key,
@@ -30,8 +30,7 @@ class MyCardTask extends StatelessWidget {
 
   void _toggleStatus(BuildContext context) {
     try {
-      final newStatus = status == TaskEnum.DONE ? TaskEnum.PENDING : TaskEnum.DONE;
-      action(id, newStatus);
+      action(id);
     } catch (e) {
       AlertHelper.show('Error', e.toString());
     }
