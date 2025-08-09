@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -14,32 +15,18 @@ import {
 } from '@nestjs/common';
 import { ArrayTasksDto } from './dto/array-tasks.decorator';
 import { CreateTasksDto } from './dto/create-tasks.decorator';
-import { ApiBearerAuth, ApiOkResponse, ApiTags, ApiCreatedResponse, ApiUnauthorizedResponse, getSchemaPath, ApiExtraModels, ApiQuery } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags, ApiUnauthorizedResponse, getSchemaPath, ApiExtraModels, ApiQuery } from '@nestjs/swagger';
 import { ApiResponse } from 'src/common/res/dto/api-response.dto';
 import { TasksService } from './tasks.service';
 import type { Request } from 'express';
 import { JwtAuthGuard } from 'src/common/conf/jwt.guard';
-import * as jwt from 'jsonwebtoken';
+import { updatedTaskDto } from './dto/update-tasks.decorator';
 
 @ApiTags('Tasks')
 @ApiBearerAuth()
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly taskService: TasksService) {}
-
-  private  verifyToken(token: string){
-      try {
-          if (!token) throw new UnauthorizedException('Missing token');
-
-          let payload: any;
-          const secret = process.env.JWT_SECRET
-          if (!secret) throw new Error('SECRET NOT FOUND')
-          payload = jwt.verify(token, secret);
-          return payload;
-      } catch (error) {
-          throw new UnauthorizedException('Invalid token');            
-      }
-  }
 
   @ApiExtraModels(ApiResponse, CreateTasksDto)
   @ApiOkResponse({
@@ -60,9 +47,9 @@ export class TasksController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async createTask(@Body() dto: CreateTasksDto, @Req() request: Request) {
-    const token = request.cookies['access_token'];
-    const payload = this.verifyToken(token)
-    const userId = payload.userId as string;
+    const payload = request.user;
+    if(!payload) throw new UnauthorizedException('No logueado');
+    const userId = payload['userId'] as string;
     const response = await this.taskService.createTask(dto, userId);
     return ApiResponse.created(response);
   }
@@ -83,15 +70,20 @@ export class TasksController {
   })
   @ApiUnauthorizedResponse({description: 'Unauthorized - JWT is missing or invalid'})
   @UseGuards(JwtAuthGuard)
-  @ApiQuery({ name: 'date', required: false, type: String, description: 'Filter tasks by creation date (ISO format)' })
+  @ApiQuery({ name: 'date', required: true, type: String, description: 'Filter tasks by creation date (ISO format)' })
   @ApiQuery({ name: 'status', required: false, type: String, description: 'Filter tasks by status (e.g., "pending", "done")' })
 
   @Get()
-  async getListTasks(@Req() request: Request,@Query('date') date?: string, @Query('status') status?: string) {
-    const token = request.cookies['access_token'];
-    const payload = this.verifyToken(token)
-    const userId = payload.userId as string;
-    return await this.taskService.getListTasks(userId,date,status);
+  async getListTasks(@Req() request: Request,@Query() query: any,@Query('date') date: string, @Query('status') status?: string) {
+    const payload = request.user;
+    console.log(payload);
+    if(!payload) throw new UnauthorizedException('No logueado');
+    const userId = payload['userId'] as string;
+    if(!date) throw new BadRequestException("No fecha prevista");
+    if(status?.split('')){
+      status = ''
+    }
+    return await this.taskService.getListTasks(userId,date,status ? status : '' );
   }
   @ApiExtraModels(ApiResponse, CreateTasksDto)
   @ApiOkResponse({
@@ -112,12 +104,12 @@ export class TasksController {
   @Put(':id')
   async updateTask(
     @Param('id') id: string,
-    @Body() dto: CreateTasksDto,
+    @Body() dto: updatedTaskDto,
     @Req() request: Request,
   ) {
-    const token = request.cookies['access_token'];
-    const payload = this.verifyToken(token)
-    const userId = payload.userId as string;
+    const payload = request.user;
+    if(!payload) throw new UnauthorizedException('No logueado');
+    const userId = payload['userId'] as string;
     return await this.taskService.updateTask(id, dto, userId);
   }
 
@@ -129,10 +121,11 @@ export class TasksController {
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async deleteTask(@Param('id') id: string, @Req() request: Request) {
-    const token = request.cookies['access_token'];
-        const payload = this.verifyToken(token)
-        const userId = payload.userId as string;
-        await this.taskService.deleteTask(id,userId);
-        return ApiResponse.deleted()
+      const payload = request.user;
+      if(!payload) throw new UnauthorizedException('No logueado');
+      const userId = payload['userId'] as string;
+      console.log('incomming id: ',id);
+      await this.taskService.deleteTask(id,userId);
+      return ApiResponse.deleted()
     }
 }

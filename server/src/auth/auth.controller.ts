@@ -6,6 +6,7 @@ import { ApiBadRequestResponse, ApiConflictResponse, ApiExtraModels, ApiOkRespon
 import { ApiResponse } from 'src/common/res/dto/api-response.dto';
 import { UserResponseDto } from './dto/res/user-response.decorator';
 import type { Response } from 'express';
+import { LoggingUserResponseDto } from './dto/res/logging-user-response.decorator';
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService){}
@@ -30,10 +31,10 @@ export class AuthController {
     @Post('register')
     async register(@Body() dto: CreateUserDto){
         const response = await this.authService.createUser(dto);
-        return ApiResponse.created(response)
+        return response
     }
 
-    @ApiExtraModels(ApiResponse, UserResponseDto)
+    @ApiExtraModels(ApiResponse, LoggingUserResponseDto)
       @ApiOkResponse({
         description: 'User logged successfully!',
         schema: {
@@ -57,13 +58,11 @@ export class AuthController {
     @ApiUnauthorizedResponse({description: 'Unauthorized - Invalid credentials'})
     @ApiBadRequestResponse({description: 'Bad Request - Invalid input data'})
     @Post('login')
-    async login(@Body() dto: LoggingUserDto, @Res({ passthrough: true }) response: Response){
+    async login(@Body() dto: LoggingUserDto){
         const token = await this.authService.logIn(dto);
-        response.cookie('access_token',token,{
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'PRODUCTION',
-            sameSite: 'strict'            
-        })
-        return 'Logged in successfully'
+        const responseDto = new LoggingUserResponseDto();
+        responseDto.email = dto.email;
+        responseDto.accessToken = token;
+        return responseDto;
     }
 }
