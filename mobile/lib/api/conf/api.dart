@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart'; 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mobile/common/AlertError.dart';
 
 class ApiClient {
   // instancia singleton privada
@@ -22,14 +23,38 @@ class ApiClient {
     dio.interceptors.add(LogInterceptor(responseBody: true));
 
     dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options,handler){
-            if(accessToken.isNotEmpty){
-              options.headers['Authorization'] = 'Bearer $accessToken';
+        InterceptorsWrapper(
+            onRequest: (options,handler){
+              if(accessToken.isNotEmpty){
+                options.headers['Authorization'] = 'Bearer $accessToken';
+              }
+              return handler.next(options);
             }
-            return handler.next(options);
-        }
-      )
+        )
     );
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (DioException err, ErrorInterceptorHandler handler) {
+          // Aquí manejas el error globalmente
+          if (err.type == DioExceptionType.connectionTimeout) {
+            AlertHelper.show('⏳ Connection timeout','El servidor se ha demorado en responder, intentalo más tarde');
+          } else if (err.type == DioExceptionType.badCertificate) {
+            AlertHelper.show('Credenciales Invalidas', err.response?.data['message']??'Vuelve a Iniciar Sesion');
+          }else if (err.type == DioExceptionType.badResponse) {
+            AlertHelper.show('Ups algo salio mal', err.response?.data['message']??'Hazlo nuevamente');
+          } else if (err.type == DioExceptionType.connectionError) {
+            AlertHelper.show('📡 Network error', 'Revisa tu conexion de internet');
+          }else if(err.response?.statusCode == 404){
+            AlertHelper.show('Recurso no Encontrado', err.response?.data['message']??'No se encontro el recurso que buscas');
+          }
+          else {
+            AlertHelper.show('⚠️ Unknown Request error', 'Contacta a los desarrolladores e informa el problema: ${err.message}');
+          }
+          handler.next(err);
+        },
+      ),
+    );
+
   }
 }

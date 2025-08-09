@@ -1,49 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:mobile/common/AlertError.dart';
 import 'package:mobile/common/TaskEnum.dart';
 
-class MyCardTask extends StatefulWidget {
+class MyCardTask extends StatelessWidget {
   final String title;
   final String description;
   final TaskEnum status;
+  final bool isSelected;
+  final String id;
+  final void Function(String id, TaskEnum status) action;
 
   const MyCardTask({
     super.key,
+    required this.id,
     required this.title,
     required this.description,
     required this.status,
+    required this.isSelected,
+    required this.action,
   });
 
-  @override
-  State<MyCardTask> createState() => _MyCardTaskState();
-}
-
-class _MyCardTaskState extends State<MyCardTask> {
-  Color colorStatus = Colors.black54;
-  IconData iconButton = Icons.check_circle;
-  @override
-  void initState() {
-    super.initState();
-    // Inicializo el color, si no tiene, pongo gris por defecto
-    colorStatus = widget.status == TaskEnum.DONE ? Colors.green : Colors.black54;
-    iconButton = widget.status == TaskEnum.DONE ? Icons.check_circle : Icons.cancel;
+  Color _getColorFromStatus(TaskEnum status) {
+    return status == TaskEnum.DONE ? Colors.green : Colors.black54;
   }
 
-  void _toggleStatus() {
-    setState(() {      
-      if (colorStatus == Colors.green && iconButton == Icons.check_circle ) {
-        colorStatus = Colors.black54;
-        iconButton = Icons.cancel;        
-      } else {
-        iconButton = Icons.check_circle;
-        colorStatus = Colors.green;
-      }
-    });
+  IconData _getIconFromStatus(TaskEnum status) {
+    return status == TaskEnum.DONE ? Icons.check_circle : Icons.cancel;
+  }
+
+  void _toggleStatus(BuildContext context) {
+    try {
+      final newStatus = status == TaskEnum.DONE ? TaskEnum.PENDING : TaskEnum.DONE;
+      action(id, newStatus);
+    } catch (e) {
+      AlertHelper.show('Error', e.toString());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorStatus = _getColorFromStatus(status);
+    final iconButton = _getIconFromStatus(status);
+
     return Card(
-      elevation: 4,    
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: isSelected ? Colors.blue.shade600 : Colors.transparent,
+          width: 4,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 4,
       margin: const EdgeInsets.all(12),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -54,28 +61,28 @@ class _MyCardTaskState extends State<MyCardTask> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  widget.title,                  
+                  title,
                   style: TextStyle(
-                    fontSize: 20, 
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: colorStatus
-                    ),
+                    color: colorStatus,
+                  ),
                 ),
                 CircleAvatar(radius: 10, backgroundColor: colorStatus),
               ],
             ),
             const SizedBox(height: 8),
-            Text(widget.description),
+            Text(description),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Estado: ${widget.status.label}"),
+                Text("Estado: ${status.label}"),
                 IconButton(
                   icon: Icon(iconButton),
                   color: colorStatus,
                   iconSize: 30,
-                  onPressed: _toggleStatus,
+                  onPressed: () => _toggleStatus(context),
                 ),
               ],
             ),

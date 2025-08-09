@@ -12,7 +12,7 @@ model DailyTask {
   status String @db.VarChar(50)
   date DateTime @db.Timestamp(6)
   taskId String @db.Uuid
-  Task Task @relation(fields: [taskId], references: [id])
+  Task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 
 model Task {

@@ -20,6 +20,7 @@ import { ApiResponse } from 'src/common/res/dto/api-response.dto';
 import { TasksService } from './tasks.service';
 import type { Request } from 'express';
 import { JwtAuthGuard } from 'src/common/conf/jwt.guard';
+import { updatedTaskDto } from './dto/update-tasks.decorator';
 
 @ApiTags('Tasks')
 @ApiBearerAuth()
@@ -100,7 +101,7 @@ export class TasksController {
   @Put(':id')
   async updateTask(
     @Param('id') id: string,
-    @Body() dto: CreateTasksDto,
+    @Body() dto: updatedTaskDto,
     @Req() request: Request,
   ) {
     const payload = request.user;
@@ -120,6 +121,7 @@ export class TasksController {
       const payload = request.user;
       if(!payload) throw new UnauthorizedException('No logueado');
       const userId = payload['userId'] as string;
+      console.log('incomming id: ',id);
       await this.taskService.deleteTask(id,userId);
       return ApiResponse.deleted()
     }

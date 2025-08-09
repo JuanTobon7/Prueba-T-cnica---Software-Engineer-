@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/api/task/api.task.dart';
 import 'package:mobile/api/conf/api.dart';
@@ -15,15 +16,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   String _messageError = '';
   String _dateStr = '';
   List<TaskDto>? tasks;
   bool _isLoading = true;
   DateTime _date = DateTime.now();
   bool _menuOpen = false;
+  String _status = '';
   final ScrollController _scrollController = ScrollController();
-
+  Set<TaskDto> _selectedTaks = {};
   ApiTask apiTask = ApiTask(ApiClient());
 
   String _formatDate(DateTime date) {
@@ -42,7 +43,6 @@ class _MyHomePageState extends State<MyHomePage> {
         'description': description,
         'createdAt': DateTime.now().toIso8601String()
       };
-      print('data is just here $data');
       TaskDto taskRes = await apiTask.createTaskDto(data);
       setState((){
         if(taskRes.title.isEmpty || taskRes.description.isEmpty || taskRes.id.isEmpty ) return;
@@ -51,14 +51,67 @@ class _MyHomePageState extends State<MyHomePage> {
       await _getList();
       _scrollController.animateTo(
         0.0,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeIn,
       );
     } on FormatException {
-      ErrorDescription('Titulo no dado');
+      AlertHelper.show('Datos Incompletos','Titulo no proporcionado');
     }
     catch(e){
-      ErrorDescription('un error inesperado a ocurrido');
+      AlertHelper.show('un error inesperado a ocurrido','');
+    }
+  }
+
+  bool afterDate(){
+    String today = _formatDate(DateTime.now());
+    return today.trim() != _dateStr.trim();
+  }
+
+  Future<void> updateDailyTask(String id, TaskEnum status) async {
+    try{
+      if(id.isEmpty) return AlertHelper.show('Datos Incompletos', 'No se especifico la tarea');
+      if(status.name.isEmpty) return AlertHelper.show('Datos Incompletos', 'No se especifico el estado');
+
+      if(afterDate()) return AlertHelper.show('Operación Invalida', 'No puede cambiar el estado de una tarea en una fecha distinta a la actual');
+
+      final data = {
+        "status": status.name,
+        "date": _formatDate(DateTime.now())
+      };
+      await apiTask.updateDailyTask(id, data);
+      await _getList();
+    }catch(e){
+      AlertHelper.show('un error inesperado a ocurrido','');
+    }finally{
+      await _getList();
+    }
+  }
+
+  Future<void> updateTaskFun(String title, String description) async{
+    try{
+      if(title.isEmpty) return;
+      final data = {
+        'title': title,
+        'description': description,
+      };
+
+      String id = _selectedTaks.first.id;
+      TaskDto taskRes = await apiTask.updateTaskDto(data,id);
+      setState((){
+        if(taskRes.title.isEmpty || taskRes.description.isEmpty || taskRes.id.isEmpty ) return;
+        tasks!.add(taskRes);
+      });
+      await _getList();
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeIn,
+      );
+    } on FormatException {
+      AlertHelper.show('Datos Incompletos','Titulo no proporcionado');
+    }
+    catch(e){
+      AlertHelper.show('un error inesperado a ocurrido','');
     }
   }
 
@@ -72,7 +125,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _getList() async {
     try {
-      String status = '';
+      String status = _status;
       final params = {
         "date": _dateStr,
         "status": status,
@@ -82,6 +135,14 @@ class _MyHomePageState extends State<MyHomePage> {
         tasks = response;
         _isLoading = false;
       });
+    } on DioException catch(err){
+      print('manejando error sueprficie: ${err.response?.data['message']}');
+      if(err.response?.statusCode == 404 ){
+        setState(() {
+          tasks = [];
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() {
         _messageError = 'Error al obtener tareas: $e';
@@ -109,6 +170,171 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  void _openFilterSheet() {
+    DateTime tempDate = _date;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Filtrar tareas',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  // Fecha igual
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch, // para que Rows tomen todo el ancho
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Fecha: ${_formatDate(tempDate)}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: tempDate,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null) {
+                                  setModalState(() => tempDate = picked);
+                                }
+                              },
+                              child: const Text('Cambiar'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
+                          children: [
+                            Text(
+                              'Estado: ${TaskEnum.fromString(_status).label}',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          IconButton(
+                            color: _status == TaskEnum.PENDING.name ? Colors.grey.shade800 : Colors.grey.shade300,
+                            onPressed: () {
+                              setState(() {
+                                _status = TaskEnum.PENDING.name;
+                              });
+                            },
+                            icon: const Icon(Icons.pending),
+                          ),
+                          Text(
+                            'Pendientes',
+                            style: TextStyle(
+                              color: _status == TaskEnum.PENDING.name ? Colors.grey.shade800 : Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Column(
+                        children: [
+                          IconButton(
+                            color: _status == TaskEnum.DONE.name ? Colors.green.shade700 : Colors.green.shade300,
+                            onPressed: () {
+                              setState(() {
+                                _status = TaskEnum.DONE.name;
+                              });
+                            },
+                            icon: const Icon(Icons.check),
+                          ),
+                          Text(
+                            'Hechos',
+                            style: TextStyle(
+                              color: _status == TaskEnum.DONE.name ? Colors.green.shade700 : Colors.green.shade400,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                 Row(
+                   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                   children: [
+                     ElevatedButton.icon(
+                       icon: const Icon(Icons.delete),
+                       label: const Text('Quitar filtros'),
+                       onPressed: () {
+                         Navigator.pop(context);
+                         setState(() {
+                           _date = DateTime.now();
+                           _status = '';
+                           _isLoading = true;
+                         });
+                         _getList();
+                       },
+                     ),
+                     ElevatedButton.icon(
+                       icon: const Icon(Icons.check),
+                       label: const Text('Aplicar Filtro'),
+                       onPressed: () {
+                         Navigator.pop(context);
+                         setState(() {
+                           _date = DateTime(tempDate.year, tempDate.month, tempDate.day);
+                           _isLoading = true;
+                         });
+                         _getList();
+                       },
+                     ),
+                   ],
+                 )
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+  Future<void> _deleteTaskFun() async{
+    try{
+      if(_selectedTaks.isEmpty){
+        return;
+      }
+      String ids = _selectedTaks.map((items)=> items.id).toList().join(',');
+      await apiTask.deleteTaskDto(ids);
+      AlertHelper.show('Operación Exitosa', 'Se eliminaron ${_selectedTaks.length} tarea/s');
+      await _getList();
+      _selectedTaks = {};
+    }
+    catch(e){
+      AlertHelper.show('Ups algo salio mal', 'Comunicate el equipo de sopote');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> floatingButtons = [];
@@ -116,7 +342,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_menuOpen) {
       floatingButtons = [
         Container(
-          margin: const EdgeInsets.only(bottom: 70),
+          margin: const EdgeInsets.only(bottom: 190),
           child: FloatingActionButton(
             heroTag: 'add',
             mini: true,
@@ -135,19 +361,33 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           margin: const EdgeInsets.only(bottom: 130),
           child: FloatingActionButton(
-            heroTag: 'done',
+            heroTag: 'delete',
             mini: true,
-            onPressed: () => print('Botón Extra 2 presionado'),
-            child: const Icon(Icons.done),
+            onPressed: _deleteTaskFun,
+            child: const Icon(Icons.delete),
           ),
         ),
         Container(
-          margin: const EdgeInsets.only(bottom: 190),
+          margin: const EdgeInsets.only(bottom: 70),
           child: FloatingActionButton(
-            heroTag: 'pending',
+            heroTag: 'edit',
             mini: true,
-            onPressed: () => print('Botón Extra 3 presionado'),
-            child: const Icon(Icons.pending),
+            onPressed: () {
+              if(_selectedTaks.length > 1) return AlertHelper.show('Cuidado', 'Si vas a editar asegurate de haber seleccionado solo una tarea');
+
+              showDialog(
+                context: context,
+                barrierDismissible: false, // para que no se cierre tocando afuera
+                builder: (context) => AddTaskDialog(
+                    initialTitle: _selectedTaks.first.title,
+                    initialDescription: _selectedTaks.first.description,
+                    onSave: (title, description) {
+                      updateTaskFun(title, description);
+                    },
+                ),
+              );
+            },
+            child: const Icon(Icons.edit),
           ),
         ),
       ];
@@ -172,8 +412,8 @@ class _MyHomePageState extends State<MyHomePage> {
         title: const Text("Gestor de Tareas Personal"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.date_range),
-            onPressed: _selectDate,
+            icon: const Icon(Icons.filter_list_alt),
+            onPressed: _openFilterSheet,
           ),
         ],
       ),
@@ -191,22 +431,35 @@ class _MyHomePageState extends State<MyHomePage> {
             TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           Text(
-            '$_counter',
+            _dateStr,
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 20),
           for (var task in tasks!)
-            MyCardTask(
-              title: task.title,
-              description: task.description,
-              status: (task.dailyTasks.status.isNotEmpty ||
-                  TaskEnum.fromString(task.dailyTasks.status)
-                      .label
-                      .isEmpty)
-                  ? TaskEnum.fromString(task.dailyTasks.status)
-                  : TaskEnum.PENDING,
-            ),
-
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (_selectedTaks.contains(task)) {
+                    _selectedTaks.remove(task);
+                  } else {
+                    _selectedTaks.add(task);
+                  }
+                });
+              },
+              child: MyCardTask(
+                id: task.id,
+                title: task.title,
+                description: task.description,
+                action: updateDailyTask,
+                status: (task.dailyTasks.status.isNotEmpty ||
+                    TaskEnum.fromString(task.dailyTasks.status)
+                        .label
+                        .isEmpty)
+                    ? TaskEnum.fromString(task.dailyTasks.status)
+                    : TaskEnum.PENDING,
+                isSelected: _selectedTaks.contains(task),
+              ),
+            )
         ],
        ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

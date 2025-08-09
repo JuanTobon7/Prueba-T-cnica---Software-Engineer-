@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
 class AddTaskDialog extends StatefulWidget {
+  final String? initialDescription;
+  final String? initialTitle;
   final void Function(String title, String description) onSave;
+
   const AddTaskDialog({
     super.key,
-    required this.onSave
+    required this.onSave,
+    this.initialDescription,
+    this.initialTitle,
   });
 
   @override
@@ -12,27 +17,44 @@ class AddTaskDialog extends StatefulWidget {
 }
 
 class _AddTaskDialogState extends State<AddTaskDialog> {
-  String _title = '';
-  String _description = '';
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
   String messageError = '';
-  void _toggleCreate(){
-    if(_title.isEmpty){
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.initialTitle ?? '');
+    _descriptionController = TextEditingController(text: widget.initialDescription ?? '');
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _toggleCreate() {
+    final title = _titleController.text.trim();
+    final description = _descriptionController.text.trim();
+
+    if (title.isEmpty) {
       setState(() {
-        messageError = 'Titulo no porporcionado!';
+        messageError = 'Título no proporcionado!';
       });
       return;
     }
 
-    widget.onSave(_title,_description);
+    widget.onSave(title, description);
     Navigator.of(context).pop();
-
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog( // <-- en vez de AlertDialog para personalizar más
+    return Dialog(
       backgroundColor: Colors.white,
-      insetPadding: const EdgeInsets.all(20), // margen en pantalla
+      insetPadding: const EdgeInsets.all(20),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -45,7 +67,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
             ),
             const SizedBox(height: 16),
             TextField(
-              onChanged: (text) => _title = text,
+              controller: _titleController,
               decoration: const InputDecoration(
                 labelText: 'Título',
                 border: OutlineInputBorder(),
@@ -53,17 +75,22 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
             ),
             const SizedBox(height: 12),
             TextField(
-              onChanged: (text) => _description = text,
+              controller: _descriptionController,
               decoration: const InputDecoration(
                 labelText: 'Descripción',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
-            if(messageError.isNotEmpty)
-              Text(messageError,
-              style: TextStyle(color: Colors.red, fontSize: 15, fontWeight: FontWeight.w800),)
-            ,
+            if (messageError.isNotEmpty)
+              Text(
+                messageError,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -72,9 +99,7 @@ class _AddTaskDialogState extends State<AddTaskDialog> {
                   child: const Text('Cancelar'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    _toggleCreate();
-                  },
+                  onPressed: _toggleCreate,
                   child: const Text('Guardar'),
                 ),
               ],

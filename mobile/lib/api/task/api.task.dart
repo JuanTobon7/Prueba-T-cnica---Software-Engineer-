@@ -27,9 +27,9 @@ class ApiTask {
   }
 
 
-  Future<TaskDto> createTaskDto(Map<String, dynamic> userData) async {
+  Future<TaskDto> createTaskDto(Map<String, dynamic> dto) async {
     try {
-      final response = await apiClient.dio.post('$baseModuleUrl', data: userData);
+      final response = await apiClient.dio.post('$baseModuleUrl', data: dto);
       if (response.statusCode != 200 && response.statusCode != 201) {
         throw Exception('Failed to register task: ${response.statusCode}');
       }
@@ -41,4 +41,39 @@ class ApiTask {
     }
   }
 
+  Future<TaskDto> updateTaskDto(Map<String, dynamic> dto,String id) async {
+    try {
+      final response = await apiClient.dio.put('$baseModuleUrl/$id', data: dto);
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to register task: ${response.statusCode}');
+      }
+      final responseData = response.data['data'];
+      TaskDto resTask = new TaskDto.fromJson(responseData);
+      return resTask;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteTaskDto(String paramId) async {
+    try{
+      final response = await apiClient.dio.delete('$baseModuleUrl/$paramId');
+      if(response.statusCode != 200){
+        throw Exception('Failed to deleted task: $paramId');
+      }
+      return;
+    }catch(e){
+      rethrow;
+    }
+
+  }
+
+  Future<void> updateDailyTask(String id, Map<String,dynamic> data) async {
+    try{
+      final response = await apiClient.dio.post('$baseModuleUrl/$id/daily-tasks', data: data);
+    }catch(e){
+      rethrow;
+    }
+  }
+  
 }
