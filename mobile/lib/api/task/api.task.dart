@@ -68,9 +68,9 @@ class ApiTask {
 
   }
 
-  Future<void> updateDailyTask(String id, Map<String,dynamic> data) async {
+  Future<void> updateDailyTask(String id,String date) async {
     try{
-      final response = await apiClient.dio.post('$baseModuleUrl/$id/daily-tasks', data: data);
+      await apiClient.dio.put('$baseModuleUrl/$id/daily-tasks/$date');
     }catch(e){
       rethrow;
     }
