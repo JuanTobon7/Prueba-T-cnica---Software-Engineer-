@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/api/auth/api.auth.dart';
@@ -17,7 +19,6 @@ class _MyLoginPageState extends State<MyLoginPage> {
   ApiAuth apiAuth = ApiAuth(ApiClient());
 
   Future<void> loginFun() async {
-    print('hey init');
 
     if (email.isEmpty || password.isEmpty) {
       setState(() {
@@ -81,6 +82,9 @@ class _MyLoginPageState extends State<MyLoginPage> {
                   await loginFun();
                 },
                 child: const Text('Iniciar Sesión'),
+              ),
+              TextButton(onPressed: ()=>context.go('/sign-up'),
+                  child: Text('Registrarse',style: TextStyle(fontSize: 12),)
               ),
               Text(
                 messageError,

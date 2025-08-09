@@ -9,7 +9,8 @@ class ApiAuth {
   Future<dynamic> register(Map<String, dynamic> userData) async {
     try {
         final response = await apiClient.dio.post('$baseModuleUrl/register', data: userData);
-        if (response.statusCode != 200 || response.statusCode != 201) {
+        print('statusCode ${response.statusCode}');
+        if (response.statusCode != 200 && response.statusCode != 201) {
           throw Exception('Failed to register user: ${response.statusCode}');
         }
         return response.data;

@@ -41,6 +41,7 @@ class ApiClient {
             AlertHelper.show('⏳ Connection timeout','El servidor se ha demorado en responder, intentalo más tarde');
           } else if (err.type == DioExceptionType.badCertificate) {
             AlertHelper.show('Credenciales Invalidas', err.response?.data['message']??'Vuelve a Iniciar Sesion');
+            navigatorKey.currentState?.pushReplacementNamed('/login');
           }else if (err.type == DioExceptionType.badResponse) {
             AlertHelper.show('Ups algo salio mal', err.response?.data['message']??'Hazlo nuevamente');
           } else if (err.type == DioExceptionType.connectionError) {

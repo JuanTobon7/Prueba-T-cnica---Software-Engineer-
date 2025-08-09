@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile/common/AlertError.dart';
 import 'package:mobile/pages/HomePage.dart';
 import 'package:mobile/pages/LoginPage.dart';
+import 'package:mobile/pages/SingUpPage.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: "assets/.env");
@@ -24,6 +25,12 @@ final GoRouter _router = GoRouter(
       path: '/login',
       builder: ( context,  state){
         return const MyLoginPage();
+      }
+    ),
+    GoRoute(
+        path:'/sign-up',
+      builder: (context, state){
+          return const MySignUpPage();
       }
     )
   ],

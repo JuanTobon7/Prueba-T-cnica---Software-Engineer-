@@ -90,6 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> updateTaskFun(String title, String description) async{
     try{
       if(title.isEmpty) return;
+      if(_selectedTaks.isEmpty) return;
       final data = {
         'title': title,
         'description': description,
@@ -201,20 +202,12 @@ class _MyHomePageState extends State<MyHomePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Fecha: ${_formatDate(tempDate)}',
+                              'Fecha: ${_formatDate(_date)}',
                               style: const TextStyle(fontSize: 16),
                             ),
                             TextButton(
                               onPressed: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: tempDate,
-                                  firstDate: DateTime(2020),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (picked != null) {
-                                  setModalState(() => tempDate = picked);
-                                }
+                                _selectDate();
                               },
                               child: const Text('Cambiar'),
                             ),
@@ -373,6 +366,7 @@ class _MyHomePageState extends State<MyHomePage> {
             heroTag: 'edit',
             mini: true,
             onPressed: () {
+              if(_selectedTaks.isEmpty) return;
               if(_selectedTaks.length > 1) return AlertHelper.show('Cuidado', 'Si vas a editar asegurate de haber seleccionado solo una tarea');
 
               showDialog(

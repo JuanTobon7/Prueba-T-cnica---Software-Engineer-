@@ -74,13 +74,16 @@ export class TasksController {
   @ApiQuery({ name: 'status', required: false, type: String, description: 'Filter tasks by status (e.g., "pending", "done")' })
 
   @Get()
-  async getListTasks(@Req() request: Request,@Query('date') date?: string, @Query('status') status?: string) {
+  async getListTasks(@Req() request: Request,@Query() query: any,@Query('date') date: string, @Query('status') status?: string) {
     const payload = request.user;
     console.log(payload);
     if(!payload) throw new UnauthorizedException('No logueado');
     const userId = payload['userId'] as string;
     if(!date) throw new BadRequestException("No fecha prevista");
-    return await this.taskService.getListTasks(userId,date,status);
+    if(status?.split('')){
+      status = ''
+    }
+    return await this.taskService.getListTasks(userId,date,status ? status : '' );
   }
   @ApiExtraModels(ApiResponse, CreateTasksDto)
   @ApiOkResponse({

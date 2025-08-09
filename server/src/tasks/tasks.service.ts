@@ -3,6 +3,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { CreateTasksDto } from './dto/create-tasks.decorator'; 
 import { Prisma, Task } from '@prisma/client';
 import { updatedTaskDto } from './dto/update-tasks.decorator';
+import { StatusTaskEnum } from 'src/daily-tasks/dto/enum/status-task/status-task.decorator';
 
 @Injectable()
 export class TasksService {
@@ -10,7 +11,6 @@ export class TasksService {
 
     async createTask(dto: CreateTasksDto, userId: string): Promise<Task>{
         if(!userId) throw new NotFoundException('User Id is required')
-        console.log('dto:',dto)
         const date = new Date(dto.createdAt);
         const task = await this.prismaService.task.create({
             data: {
@@ -23,35 +23,43 @@ export class TasksService {
         return task;
     }
 
-    async getListTasks(userId: string, dateStr?: string, status?: string): Promise<Task[]>{
-        if(!userId) throw new NotFoundException('User Id is required');
-        const date = dateStr ? new Date(dateStr) : undefined;  
-        const dateDaily =  dateStr ? new Date(dateStr) : undefined;
-        if (date) {
-            date.setUTCHours(23, 59, 59, 999);
-        }        
+    async getListTasks(userId: string, dateStr: string, status: string): Promise<Task[]> {
+        if (!userId) throw new NotFoundException('User Id is required');
+
+
+        let date = new Date(dateStr);
+        if (dateStr) {
+            date.setDate(date.getDate() + 1);
+        }
+        if(!status){
+         status = '';
+        }
+
         const tasks = await this.prismaService.task.findMany({
             where: {
                 userId: userId,
-                createdAt: {
-                    lte: date
-                },
-                dailyTasks: {
-                    some: {
-                        status: status
-                    }
-                }
+                createdAt: {lte: date},
             },
-            orderBy: { createdAt: 'desc' },
             include: {
-                dailyTasks: {
-                    where: {status: status, date: dateDaily}
-                }                
-            }
+                dailyTasks: {}
+            },
+            orderBy: { createdAt: 'desc' },         
         });
-        if(!tasks || tasks.length === 0) throw new NotFoundException(`No tasks found for this user in date ${dateStr}`);
-        return tasks;
+
+        const filterTasks = tasks.filter(item => {
+            if (!status || status.trim() === '') return true;
+            if (!item.dailyTasks || item.dailyTasks.length === 0) return true;
+            return item.dailyTasks.some(dt => dt.status.includes(status));
+        });
+
+
+        if (!tasks || tasks.length === 0) {
+            throw new NotFoundException(`No tasks found for this user in date ${dateStr}`);
+        }
+
+        return filterTasks;
     }
+
 
     async updateTask(id: string, dto: updatedTaskDto, userId: string): Promise<Task>{
         if(!userId) throw new NotFoundException('User Id is required');
@@ -70,7 +78,6 @@ export class TasksService {
 
     async deleteTask(id: string, userId: string): Promise<void>{
         if(!id) throw new NotFoundException('Task Id is required');
-        console.log('id: ',id)
         const splitedId = id.split(',')
         const task = await this.prismaService.task.findMany({where: {id: {in: splitedId}, userId: userId}});
         if(!task) throw new NotFoundException(`Task with Id ${id} not found`)

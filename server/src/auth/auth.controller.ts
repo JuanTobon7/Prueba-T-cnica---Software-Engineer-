@@ -31,7 +31,7 @@ export class AuthController {
     @Post('register')
     async register(@Body() dto: CreateUserDto){
         const response = await this.authService.createUser(dto);
-        return ApiResponse.created(response)
+        return response
     }
 
     @ApiExtraModels(ApiResponse, LoggingUserResponseDto)

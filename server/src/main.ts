@@ -19,7 +19,9 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.setGlobalPrefix('api/v1');
   const config = new DocumentBuilder()
-    .setTitle('My API')
+    .setTitle('Gestor de Tareas Personales')
+    .setBasePath('api/v1')
+    .setDescription('Documentación para prueba tecnica gestor de tareas personales')
     .setVersion('1.0')
     .build();
     app.useGlobalPipes(
