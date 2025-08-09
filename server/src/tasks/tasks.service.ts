@@ -9,12 +9,14 @@ export class TasksService {
 
     async createTask(dto: CreateTasksDto, userId: string): Promise<Task>{
         if(!userId) throw new NotFoundException('User Id is required')
+        console.log('dto:',dto)
+        const date = new Date(dto.createdAt);
         const task = await this.prismaService.task.create({
             data: {
                 userId: userId,
                 title: dto.title,
                 description: dto.description,
-                createdAt: dto.createdAt,
+                createdAt: date,
             }
         });
         return task;
