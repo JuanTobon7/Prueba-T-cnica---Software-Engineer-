@@ -20,6 +20,14 @@ Ideal para apps móviles con backend escalable y modular.
 La documentacion en la API esta en este link: https://prueba-t-cnica-software-engineer.onrender.com/swagger
 ## Installation
 
+
+## Demo
+
+APK: https://drive.google.com/drive/folders/1zhv0q2-D24cf4cWuIqe0ADHGB6dAxtoy?usp=sharing
+Credenciales Prueba:
+ --user: juan@example.com
+ -- password: S3cukkkd!
+
 ### Instalacion front 
 
 ```bash
@@ -35,13 +43,6 @@ La documentacion en la API esta en este link: https://prueba-t-cnica-software-en
   npm run start
     
 ```
-
-
-## Demo
-
-APK: https://drive.google.com/drive/folders/1zhv0q2-D24cf4cWuIqe0ADHGB6dAxtoy?usp=sharing
-
-
 
 
 
