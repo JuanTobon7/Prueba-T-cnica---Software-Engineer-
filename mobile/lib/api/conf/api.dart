@@ -14,7 +14,7 @@ class ApiClient {
   // constructor privado
   ApiClient._internal() {
     dio = Dio(BaseOptions(
-      baseUrl: dotenv.env['API_URL'] ?? 'http://127.0.0.1:3000/api/v1',
+      baseUrl: dotenv.env['API_URL'] ?? 'https://prueba-t-cnica-software-engineer.onrender.com/',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
     ));
