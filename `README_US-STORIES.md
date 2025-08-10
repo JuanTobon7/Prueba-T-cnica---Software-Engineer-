@@ -20,10 +20,10 @@ Decisión: se implementó como una todo-daily porque el documento de requerimien
 • Si hubo un problema al guardar, recibo un aviso y puedo intentar nuevamente. |
 | US-03 | Editar tarea | 🟠 Media | Como usuario, quiero cambiar título y descripción para corregir o añadir detalles | • Puedo abrir una tarea y editar su título o descripción desde la propia lista.
 • Los cambios se reflejan en la lista una vez guardados.
-• Si ocurre un error al guardar, el sistema me informa y mantiene la versión anterior hasta que se confirme el guardado. |
+|
 | US-04 | Marcar/desmarcar completada | 🔴 Alta | Como usuario, quiero togglear estado para llevar control rápido del progreso | • Con un toque puedo marcar una tarea como completada o volverla pendiente.
 • El cambio se muestra inmediatamente para dar feedback visual (por ejemplo, una animación o cambio de estilo).
-• Si hay un problema al guardar el estado, recibo un aviso y el sistema intenta recuperar el estado correcto. |
+
 | US-05 | Eliminar tarea | 🟠 Media | Como usuario, quiero eliminar tareas irrelevantes para mantener la lista limpia | • Puedo eliminar una tarea con un gesto o botón y debo confirmar la acción.
 • La tarea desaparece de la lista al confirmar.
 • El sistema ofrece una opción de "deshacer" durante unos segundos en caso de que haya sido un borrado accidental. |
@@ -35,3 +35,4 @@ Decisión: se implementó como una todo-daily porque el documento de requerimien
 • Las acciones críticas quedan deshabilitadas mientras se procesan para evitar confusión. |
 
 ---
+
