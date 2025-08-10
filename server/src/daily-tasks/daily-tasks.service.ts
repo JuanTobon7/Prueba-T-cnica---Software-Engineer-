@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DailyTask } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
-import { DailyTasksDto } from './dto/req/daily-task.dto'; 
+import { StatusTaskEnum } from './dto/enum/status-task/status-task.decorator';
 
 @Injectable()
 export class DailyTasksService {
@@ -20,28 +20,25 @@ export class DailyTasksService {
         }
     }
 
-    private async updateTask(id: string, taskId: string, dailyNew: DailyTasksDto): Promise<DailyTask>{
-        return await this.prismaService.dailyTask.update({
-            where: {taskId: taskId, date: new Date(dailyNew.date), id: id},
-            data: {
-                status: dailyNew.status
-            }
-
-        })
+    private async delete(id: string, taskId: string, date: Date): Promise<void>{
+        await this.prismaService.dailyTask.delete({
+            where: {taskId: taskId, date: new Date(date), id: id},
+        })        
     }
 
-    async updateDailyTask(taskId: string, dailyNew: DailyTasksDto): Promise<DailyTask>{
+    async updateDailyTask(taskId: string, date: Date): Promise<void>{
         if(!taskId) throw new BadRequestException('taskId is required');
         try {
-            const existingDailyTask = await this.existsDailyTask(taskId,new Date(dailyNew.date))
+            const existingDailyTask = await this.existsDailyTask(taskId,date)
             if(existingDailyTask){
-                return await this.updateTask(existingDailyTask.id,taskId, dailyNew);
+                await this.delete(existingDailyTask.id,taskId, date);
+                return;
             }
-            return await this.prismaService.dailyTask.create({
+            await this.prismaService.dailyTask.create({
                 data: {
-                    status: dailyNew.status,
+                    status: StatusTaskEnum.DONE,
                     taskId: taskId,
-                    date: new Date(dailyNew.date)
+                    date: date
                 }
             });
         } catch (error) {
