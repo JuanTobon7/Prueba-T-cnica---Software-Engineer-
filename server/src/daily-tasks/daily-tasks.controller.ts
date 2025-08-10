@@ -1,8 +1,6 @@
-import { BadRequestException, Body, Controller, HttpCode, Param, Post, Req, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, HttpCode, Param, Put, Query, UseGuards } from '@nestjs/common';
 import { DailyTasksService } from './daily-tasks.service';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiExtraModels, ApiOkResponse, ApiTags, ApiUnauthorizedResponse, getSchemaPath } from '@nestjs/swagger';
-import { ApiResponse } from 'src/common/res/dto/api-response.dto';
-import { DailyTasksDto } from './dto/req/daily-task.dto';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiExtraModels, ApiOkResponse, ApiQuery, ApiTags, ApiUnauthorizedResponse, getSchemaPath } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/common/conf/jwt.guard';
 
 @ApiTags('Daily Tasks')
@@ -11,27 +9,20 @@ import { JwtAuthGuard } from 'src/common/conf/jwt.guard';
 export class DailyTasksController {
     constructor(private readonly dailyTaskService: DailyTasksService){}
         
-    @ApiExtraModels(ApiResponse,DailyTasksDto)
     @ApiOkResponse({
-        description: 'Successful Creation of Task',
-        schema: {
-            allOf: [
-            { $ref: getSchemaPath(ApiResponse)},
-            {
-                properties: {
-                data: { $ref: getSchemaPath(DailyTasksDto)},
-                },
-            },
-            ],
-        },
+        description: 'Successful Update of DailyTask',
+        example: 'Resource Updated'
     })
     @HttpCode(201)
     @ApiUnauthorizedResponse({ description: 'Unauthorized - JWT is invalid or missing' })
     @ApiBadRequestResponse({ description: 'Bad Request - Invalid input data'})
     @UseGuards(JwtAuthGuard)
-    @Post()
-    async updateDailyTask(@Body() dto: DailyTasksDto,@Param('taskId') taskId: string){
+    @ApiQuery({ name: 'date', required: true, type: String, description: 'Filter tasks by creation date (ISO format)' })
+    @Put(':date')
+    async updateDailyTask(@Param('taskId') taskId: string, @Param('date') date: string){
         if(!taskId) throw new BadRequestException('taskId is required')
-        return await this.dailyTaskService.updateDailyTask(taskId,dto);
+        if(!date) throw new BadRequestException('Fecha requerida')
+        await this.dailyTaskService.updateDailyTask(taskId,new Date(date));        
+        return 'Resource Updated';
     }    
 }
